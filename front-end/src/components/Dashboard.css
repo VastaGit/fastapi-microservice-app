@@ -1,0 +1,51 @@
+/* src/components/Dashboard.css */
+
+/* Sidebar Styling */
+.sidebar {
+  position: fixed; /* Fixes the sidebar to the viewport */
+  top: 0;
+  left: 0;
+  width: 250px; /* Set a fixed width for the sidebar */
+  height: 100vh; /* Full viewport height */
+  background-color: #f8f9fa; /* Bootstrap's light background */
+  padding-top: 20px;
+  overflow-y: auto; /* Adds scroll if content overflows */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */
+}
+
+.sidebar-heading {
+  padding-left: 15px;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.nav-link {
+  color: #333;
+  padding: 10px 15px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+  background-color: #e9ecef;
+  color: #000;
+  text-decoration: none;
+}
+
+/* Main Content Styling */
+.main-content {
+  margin-left: 250px; /* Matches the sidebar width */
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%; /* Full width on smaller screens */
+    height: auto;
+    position: relative;
+  }
+  
+  .main-content {
+    margin-left: 0; /* Remove margin on smaller screens */
+  }
+}
