@@ -1,11 +1,21 @@
-// import { useState } from 'react';
-import Dashboard from './components/Dashboard';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Products from './components/Products';
+import CreateProduct from './components/CreateProduct';
+import Orders from './components/Orders';
+import MakeOrder from './components/MakeOrder';
 
 function App() {
   return (
-    <>
-      <Dashboard />
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Products />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/create-product" element={<CreateProduct />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/make-order" element={<MakeOrder />} />
+
+      </Routes>
+    </Router>
   );
 }
 
