@@ -1,0 +1,34 @@
+# Go binary files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build cache
+*.out
+*.test
+
+# Vendor directory
+/vendor/
+
+# IDE specific files
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vscode/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# Coverage files
+*.cov
+
+# Ignore sum files
+sum
+
+#DB
+users.db
