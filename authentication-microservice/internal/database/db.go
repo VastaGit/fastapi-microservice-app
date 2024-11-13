@@ -29,5 +29,7 @@ func InitDatabase() *gorm.DB {
 		log.Fatal("Failed to migrate database: ", err)
 	}
 
+	log.Println("Database migrated successfully!")
+
 	return db
 }
