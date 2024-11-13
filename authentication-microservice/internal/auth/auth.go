@@ -2,6 +2,7 @@ package auth
 
 import (
 	"gin-authentication/internal/models"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,8 +17,9 @@ func Register(db *gorm.DB, c *gin.Context) {
 		return
 	}
 	// Here you would typically hash the password before saving
-	// user.Password = hashPassword(user.Password) // Implement hashPassword function
+	user.Password, _ = hashPassword(user.Password) // Implement hashPassword function
 	if err := db.Create(&user).Error; err != nil {
+		log.Println("Error creating user:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user"})
 		return
 	}
@@ -33,6 +35,11 @@ func Register(db *gorm.DB, c *gin.Context) {
 
 func comparePassword(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+}
+
+func hashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashedPassword), err
 }
 
 func Login(db *gorm.DB, c *gin.Context) {
@@ -63,9 +70,4 @@ func Login(db *gorm.DB, c *gin.Context) {
 	// Generate a token and respond (implement token generation)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 
-}
-
-func Profile(c *gin.Context) {
-	// Example protected profile route
-	c.JSON(http.StatusOK, gin.H{"message": "This is a protected profile route"})
 }
