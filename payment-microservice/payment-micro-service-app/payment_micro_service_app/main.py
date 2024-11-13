@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.background import BackgroundTasks
 from redis_om import get_redis_connection, HashModel
@@ -23,11 +23,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 redis = get_redis_connection(
-    host = redis_host,
-    port = int(redis_port),
-    password = redis_passport,
-    decode_responses = True,
+    host=redis_host,
+    port=int(redis_port),
+    password=redis_passport,
+    decode_responses=True,
 )
+
 
 class Order(HashModel):
     product_id: str
@@ -36,7 +37,7 @@ class Order(HashModel):
     total: float
     quantity: int
     status: str
-    
+
     class Meta:
         database = redis
 
@@ -44,6 +45,7 @@ class Order(HashModel):
 class OrderCreate(BaseModel):
     product_id: str
     quantity: int
+
 
 class OrderRead(BaseModel):
     id: str
@@ -54,36 +56,54 @@ class OrderRead(BaseModel):
     quantity: int
     status: str
 
+
 def order_operation(order: Order):
     time.sleep(5)
     order.status = "Completed"
     order.save()
     redis.xadd('order_completed', order.model_dump(), '*')
-    
+
+
 @app.get("/orders", response_model=list[OrderRead])
 async def get_Orders():
     Order_pks = Order.all_pks()
     Orders = [Order.get(pk) for pk in Order_pks]
-    return [OrderRead(id=ord.pk, product_id=ord.product_id, fee=ord.fee, price=ord.price, quantity=ord.quantity, total=ord.total, status=ord.status) for ord in Orders]
+    return [OrderRead(
+        id=ord.pk,
+        product_id=ord.product_id, fee=ord.fee, price=ord.price,
+        quantity=ord.quantity, total=ord.total,
+        status=ord.status) for ord in Orders
+    ]
 
 
 @app.post("/order", response_model=OrderRead)
-async def create_order(order_create: OrderCreate, background_tasks: BackgroundTasks):
-    
-    response = requests.get(f'http://127.0.0.1:8000/products/{order_create.product_id}')
+async def create_order(order_create: OrderCreate,
+                       background_tasks: BackgroundTasks):
+
+    response = requests.get(
+        f'http://127.0.0.1:8000/products/{order_create.product_id}')
     product = response.json()
-    
-    order = Order(product_id=order_create.product_id, fee=product["price"] * 0.2, price=product["price"], quantity=order_create.quantity, total=(product["price"] * 1.2) * order_create.quantity, status="Pending")
+
+    order = Order(
+        product_id=order_create.product_id, fee=product["price"] * 0.2,
+        price=product["price"],
+        quantity=order_create.quantity, total=(product["price"] * 1.2) *
+        order_create.quantity, status="Pending")
     order.save()
-    
+
     background_tasks.add_task(order_operation, order)
-    
-    return OrderRead(id=order.pk, product_id=order.product_id, price=order.price, quantity=order.quantity, fee=order.fee, total=order.total, status=order.status)
-    
+
+    return OrderRead(id=order.pk, product_id=order.product_id,
+                     price=order.price, quantity=order.quantity, fee=order.fee,
+                     total=order.total, status=order.status)
+
+
 @app.get("/orders/{pk}", response_model=OrderRead)
 async def get_Order(pk: str):
     order = Order.get(pk)
-    return OrderRead(id=order.pk, product_id=order.product_id, price=order.price, quantity=order.quantity, fee=order.fee, total=order.total, status=order.status)
+    return OrderRead(id=order.pk, product_id=order.product_id,
+                     price=order.price, quantity=order.quantity, fee=order.fee,
+                     total=order.total, status=order.status)
 
 # @app.delete("/Orders/{pk}")
 # async def delete_Order(pk: str):

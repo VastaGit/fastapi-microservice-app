@@ -4,10 +4,11 @@ import time
 key = "refund_order"
 group = "payment-group"
 
+
 try:
     redis.xgroup_create(key, group, mkstream=True)
-except:
-    print("Group already exists")
+except Exception as e:
+    print("Group already exists ", e)
 
 while True:
     try:
