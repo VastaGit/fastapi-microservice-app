@@ -421,3 +421,5 @@
 127.0.0.1 - - [05/Jan/2025:11:56:37 +0200] "GET /inventory/products HTTP/1.1" 500 177 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
 127.0.0.1 - - [05/Jan/2025:12:04:05 +0200] "GET /inventory/products HTTP/1.1" 500 177 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
 127.0.0.1 - - [05/Jan/2025:12:04:05 +0200] "GET /inventory/products HTTP/1.1" 500 177 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
+127.0.0.1 - - [05/Jan/2025:12:07:04 +0200] "GET /inventory/products HTTP/1.1" 500 177 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
+127.0.0.1 - - [05/Jan/2025:12:07:04 +0200] "GET /inventory/products HTTP/1.1" 500 177 "http://localhost:5173/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0"
