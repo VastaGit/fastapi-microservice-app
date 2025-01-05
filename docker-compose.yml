@@ -1,0 +1,187 @@
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sadnightdynamite
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+
+  # RabbitMQ for Celery
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "15672:15672" # Management UI
+    networks:
+      - backend
+
+  # Authentication service instances
+  auth-service1:
+    build:
+      context: ./authentication-microservice
+    container_name: auth-service1
+    volumes:
+      - auth_data:/data
+    environment:
+      SQLITE_FILE: /data/auth-db.sqlite
+    command: go run cmd/app/main.go
+    expose:
+      - "8080"
+    networks:
+      - backend
+
+  auth-service2:
+    build:
+      context: ./authentication-microservice
+    container_name: auth-service2
+    volumes:
+      - auth_data:/data
+    environment:
+      SQLITE_FILE: /data/auth-db.sqlite
+    command: go run cmd/app/main.go
+    expose:
+      - "8080"
+    networks:
+      - backend
+
+  # Product service instances
+  product-service1:
+    build:
+      context: ./inventory-microservice
+    container_name: product-service1
+    command: uvicorn micro-service-app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-inventory-db
+      CELERY_BROKER_URL: pyamqp://guest@rabbitmq//
+      CELERY_RESULT_BACKEND: rpc://
+    depends_on:
+      - postgres
+      - rabbitmq
+    expose:
+      - "8000"
+    networks:
+      - backend
+
+  product-service2:
+    build:
+      context: ./inventory-microservice
+    container_name: product-service2
+    command: uvicorn micro-service-app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-inventory-db
+      CELERY_BROKER_URL: pyamqp://guest@rabbitmq//
+      CELERY_RESULT_BACKEND: rpc://
+    depends_on:
+      - postgres
+      - rabbitmq
+    expose:
+      - "8000"
+    networks:
+      - backend
+
+  # Product Celery worker
+  product-worker:
+    build:
+      context: ./inventory-microservice
+    container_name: product-worker
+    command: celery -A micro-service-app.celery_app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-inventory-db
+      CELERY_BROKER_URL: pyamqp://guest@rabbitmq//
+      CELERY_RESULT_BACKEND: rpc://
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - backend
+
+  # Order service instances
+  order-service1:
+    build:
+      context: ./payment-microservice
+    container_name: order-service1
+    command: uvicorn payment-micro-service-app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-payment-db
+      INVENTORY_DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-inventory-db
+      CELERY_BROKER_URL: pyamqp://guest@rabbitmq//
+      CELERY_RESULT_BACKEND: rpc://
+      JWT_SECRET: 123456789
+    depends_on:
+      - postgres
+      - rabbitmq
+    expose:
+      - "8000"
+    networks:
+      - backend
+
+  order-service2:
+    build:
+      context: ./payment-microservice
+    container_name: order-service2
+    command: uvicorn payment-micro-service-app.main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-payment-db
+      INVENTORY_DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-inventory-db
+      CELERY_BROKER_URL: pyamqp://guest@rabbitmq//
+      CELERY_RESULT_BACKEND: rpc://
+      JWT_SECRET: 123456789
+    depends_on:
+      - postgres
+      - rabbitmq
+    expose:
+      - "8000"
+    networks:
+      - backend
+
+  # Order Celery worker
+  order-worker:
+    build:
+      context: ./payment-microservice
+    container_name: order-worker
+    command: celery -A payment-micro-service-app.celery_app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-payment-db
+      INVENTORY_DATABASE_URL: postgresql://postgres:sadnightdynamite@postgres/ms-inventory-db
+      CELERY_BROKER_URL: pyamqp://guest@rabbitmq//
+      CELERY_RESULT_BACKEND: rpc://
+      JWT_SECRET: 123456789
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - backend
+
+  # Nginx with integrated frontend
+  nginx:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - auth-service1
+      - auth-service2
+      - product-service1
+      - product-service2
+      - order-service1
+      - order-service2
+    networks:
+      - backend
+
+volumes:
+  db_data:
+  auth_data:
+
+
+networks:
+  backend:
+    driver: bridge

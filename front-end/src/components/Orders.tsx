@@ -2,18 +2,26 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import Navbar from "./OrdersNavbar";
 
+interface Order {
+    id: string;
+    product_id: string;
+    quantity: number;
+    total: number;
+    status: string;
+}
+
 const Orders: React.FC = () => {
-    const [orders, setOrders] = useState([{
-        "id": "",
-        "product_id": "",
-        "quantity": 0,
-        "total": 0,
-        "status": ""
-    }]);
+    const [orders, setOrders] = useState<Order[]>([]);
 
     useEffect(() => {
+        const token = sessionStorage.getItem('token');
         axios
-            .get("http://127.0.0.1:8001/orders/")
+            .get("http://127.0.0.1/payment/orders",
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
             .then((response) => {
                 console.log(response.data);
                 setOrders(response.data);
@@ -24,36 +32,51 @@ const Orders: React.FC = () => {
     }, []);
 
     return (
-        <div>
+        <div className="min-h-screen bg-gray-100">
             <Navbar />
-            <main className="main-content">
-                <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h2>Orders</h2>
+
+            <main className="max-w-5xl mx-auto p-6">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-semibold text-gray-800">Orders</h2>
                 </div>
 
-                <div className="table-responsive">
-                    <table className="table table-striped table-bordered table-hover">
-                        <thead className="thead-dark">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+                        <thead className="bg-blue-600 text-white">
                             <tr>
-                                <th className="border border-gray-300 px-4 py-2">Order ID</th>
-                                <th className="border border-gray-300 px-4 py-2">Product ID</th>
-                                <th className="border border-gray-300 px-4 py-2">Quantity</th>
-                                <th className="border border-gray-300 px-4 py-2">Total Price</th>
-                                <th className="border border-gray-300 px-4 py-2">Status</th>
-
+                                <th className="px-6 py-3 text-left uppercase tracking-wider">Order ID</th>
+                                <th className="px-6 py-3 text-left uppercase tracking-wider">Product ID</th>
+                                <th className="px-6 py-3 text-left uppercase tracking-wider">Quantity</th>
+                                <th className="px-6 py-3 text-left uppercase tracking-wider">Total Price</th>
+                                <th className="px-6 py-3 text-left uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="text-gray-700">
                             {orders.map((order) => (
-                                <tr key={order.id}>
-                                    <td className="border border-gray-300 px-4 py-2">{order.id}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{order.product_id}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{order.quantity}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{order.total}</td>
-                                    <td className="border border-gray-300 px-4 py-2">{order.status}</td>
-
+                                <tr key={order.id} className="border-b hover:bg-gray-100">
+                                    <td className="px-6 py-4">{order.id}</td>
+                                    <td className="px-6 py-4">{order.product_id}</td>
+                                    <td className="px-6 py-4">{order.quantity}</td>
+                                    <td className="px-6 py-4">${order.total.toFixed(2)}</td>
+                                    <td className={
+                                        `px-6 py-4 rounded-md text-center ${order.status === "Completed"
+                                            ? "bg-green-100 text-green-800"
+                                            : order.status === "Pending"
+                                                ? "bg-yellow-100 text-yellow-800"
+                                                : "bg-red-100 text-red-800"
+                                        }`
+                                    }>
+                                        {order.status}
+                                    </td>
                                 </tr>
                             ))}
+                            {orders.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                        No orders available.
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
